@@ -1,0 +1,1871 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest App - Game-style AI Workflow App Concept</title>
+    <style>
+        :root {
+            --bg-dark: #0f0e17;
+            --bg-card: #1a1a2e;
+            --bg-card-alt: #16213e;
+            --accent-purple: #a855f7;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --accent-pink: #ec4899;
+            --accent-orange: #f97316;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #334155;
+            --gradient-hero: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            --gradient-quest: linear-gradient(135deg, #1a1a2e, #16213e);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* ===== NAVIGATION ===== */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(15, 14, 23, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+            padding: 0.75rem 2rem;
+        }
+
+        nav .nav-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        nav .logo {
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: var(--gradient-hero);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        nav .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            list-style: none;
+        }
+
+        nav .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.3s;
+        }
+
+        nav .nav-links a:hover { color: var(--accent-purple); }
+
+        @media (max-width: 768px) {
+            nav .nav-links { display: none; }
+        }
+
+        /* ===== HERO ===== */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 6rem 2rem 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 30% 50%, rgba(102, 126, 234, 0.15) 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 50%, rgba(118, 75, 162, 0.1) 0%, transparent 50%);
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-2%, 2%); }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            background: rgba(168, 85, 247, 0.15);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: 50px;
+            color: var(--accent-purple);
+            font-size: 0.85rem;
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            background: var(--gradient-hero);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: fadeInUp 0.8s ease-out 0.1s both;
+        }
+
+        .hero p {
+            font-size: clamp(1rem, 2vw, 1.3rem);
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 2.5rem;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .hero-visual {
+            margin-top: 3rem;
+            animation: fadeInUp 1s ease-out 0.4s both;
+        }
+
+        .hero-visual img {
+            max-width: 500px;
+            width: 100%;
+            border-radius: 16px;
+            border: 2px solid rgba(168, 85, 247, 0.3);
+            box-shadow: 0 20px 60px rgba(168, 85, 247, 0.15);
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== SECTIONS ===== */
+        section {
+            padding: 5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--accent-purple);
+            margin-bottom: 0.5rem;
+        }
+
+        .section-title {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .section-desc {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            max-width: 700px;
+            margin-bottom: 3rem;
+        }
+
+        /* ===== PROBLEM ===== */
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .problem-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+
+        .problem-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-purple);
+        }
+
+        .problem-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .problem-card h3 {
+            font-size: 1.15rem;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        .problem-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* ===== CONCEPT MAPPING ===== */
+        .concept-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: var(--bg-card);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .concept-table th {
+            padding: 1rem 1.5rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .concept-table th:first-child {
+            background: rgba(168, 85, 247, 0.15);
+            color: var(--accent-purple);
+        }
+
+        .concept-table th:last-child {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-green);
+        }
+
+        .concept-table td {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.95rem;
+        }
+
+        .concept-table tr:hover td {
+            background: rgba(168, 85, 247, 0.05);
+        }
+
+        .concept-arrow {
+            text-align: center;
+            color: var(--accent-yellow);
+            font-size: 1.2rem;
+        }
+
+        /* ===== MOCKUP SCREENS ===== */
+        .mockup-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .mockup-phone {
+            background: var(--bg-card);
+            border-radius: 24px;
+            border: 2px solid var(--border);
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .mockup-phone:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .mockup-status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 1.25rem;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .mockup-screen {
+            padding: 1.5rem;
+            min-height: 420px;
+        }
+
+        .mockup-label {
+            text-align: center;
+            padding: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            border-top: 1px solid var(--border);
+            background: rgba(0,0,0,0.2);
+        }
+
+        /* Mockup inner elements */
+        .m-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .m-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .m-user-info h4 {
+            font-size: 0.95rem;
+        }
+
+        .m-user-info span {
+            font-size: 0.75rem;
+            color: var(--accent-yellow);
+        }
+
+        .m-level-bar {
+            height: 6px;
+            background: rgba(168, 85, 247, 0.2);
+            border-radius: 3px;
+            margin: 0.5rem 0 1.5rem;
+            overflow: hidden;
+        }
+
+        .m-level-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-pink));
+        }
+
+        .m-quest-card {
+            background: var(--bg-card-alt);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: border-color 0.2s;
+        }
+
+        .m-quest-card:hover { border-color: var(--accent-purple); }
+
+        .m-quest-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .m-quest-info h5 {
+            font-size: 0.85rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .m-quest-info span {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .m-xp-badge {
+            margin-left: auto;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 8px;
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-yellow);
+            white-space: nowrap;
+        }
+
+        /* Onboarding mockup */
+        .m-onboard-step {
+            text-align: center;
+            padding: 2rem 1rem;
+        }
+
+        .m-onboard-step .m-big-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .m-onboard-step h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .m-onboard-step p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .m-choice-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .m-choice {
+            background: var(--bg-card-alt);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .m-choice.selected {
+            border-color: var(--accent-purple);
+            background: rgba(168, 85, 247, 0.1);
+        }
+
+        .m-choice span {
+            display: block;
+            font-size: 2rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .m-choice small {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Quest detail mockup */
+        .m-quest-detail-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .m-quest-detail-header .m-big-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .m-quest-detail-header h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .m-difficulty {
+            color: var(--accent-yellow);
+            font-size: 0.85rem;
+        }
+
+        .m-input-field {
+            background: var(--bg-card-alt);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .m-input-field label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--accent-purple);
+            margin-bottom: 0.3rem;
+        }
+
+        .m-input-field .m-placeholder {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .m-input-field .m-hint {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+            font-style: italic;
+        }
+
+        .m-btn {
+            display: block;
+            width: 100%;
+            padding: 0.85rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: transform 0.2s;
+        }
+
+        .m-btn:hover { transform: scale(1.02); }
+
+        .m-btn-primary {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            color: white;
+        }
+
+        /* Execution mockup */
+        .m-chat-bubble {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            animation: bubbleIn 0.4s ease-out;
+        }
+
+        @keyframes bubbleIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .m-chat-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .m-chat-text {
+            background: var(--bg-card-alt);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-size: 0.85rem;
+            max-width: 80%;
+        }
+
+        .m-progress-bar {
+            background: rgba(168, 85, 247, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .m-progress-bar .m-progress-track {
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .m-progress-bar .m-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-blue));
+            border-radius: 4px;
+            animation: progressAnim 3s ease-in-out infinite;
+        }
+
+        @keyframes progressAnim {
+            0% { width: 30%; }
+            50% { width: 75%; }
+            100% { width: 30%; }
+        }
+
+        .m-progress-label {
+            font-size: 0.75rem;
+            color: var(--accent-green);
+        }
+
+        /* Result mockup */
+        .m-result-celebration {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .m-result-celebration .m-big-icon { font-size: 3rem; }
+
+        .m-xp-gain {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 50px;
+            color: var(--accent-yellow);
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin: 0.5rem 0;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .m-result-preview {
+            background: var(--bg-card-alt);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            max-height: 150px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .m-result-preview::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: linear-gradient(transparent, var(--bg-card-alt));
+        }
+
+        /* ===== CHARACTER SECTION ===== */
+        .character-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 2rem;
+        }
+
+        .character-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .character-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 40px rgba(168, 85, 247, 0.15);
+        }
+
+        .character-card img {
+            width: 100%;
+            display: block;
+        }
+
+        .character-card .card-body {
+            padding: 1.5rem;
+        }
+
+        .character-card h3 {
+            font-size: 1.15rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .character-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* ===== TECH STACK ===== */
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+        }
+
+        .tech-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+
+        .tech-item:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent-blue);
+        }
+
+        .tech-item .tech-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .tech-item h4 {
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .tech-item span {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* ===== GAMIFICATION ===== */
+        .level-track {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 2rem;
+        }
+
+        .level-node {
+            text-align: center;
+            flex: 0 0 auto;
+        }
+
+        .level-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 0.5rem;
+            border: 3px solid var(--border);
+            transition: transform 0.3s;
+        }
+
+        .level-circle:hover { transform: scale(1.1); }
+
+        .level-node h4 { font-size: 0.85rem; }
+        .level-node span { font-size: 0.75rem; color: var(--text-muted); }
+
+        .level-connector {
+            flex: 1;
+            height: 3px;
+            background: var(--border);
+            position: relative;
+            min-width: 40px;
+        }
+
+        .level-connector::after {
+            content: '';
+            position: absolute;
+            right: -4px;
+            top: -3px;
+            border: 4px solid transparent;
+            border-left: 6px solid var(--border);
+        }
+
+        @media (max-width: 600px) {
+            .level-track {
+                flex-direction: column;
+                align-items: center;
+            }
+            .level-connector {
+                width: 3px;
+                height: 40px;
+                min-width: auto;
+            }
+            .level-connector::after {
+                right: auto;
+                bottom: -4px;
+                top: auto;
+                left: -3px;
+                border: 4px solid transparent;
+                border-top: 6px solid var(--border);
+                border-left: none;
+            }
+        }
+
+        /* ===== QUEST LIST ===== */
+        .quest-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .quest-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.25rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .quest-item:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-purple);
+        }
+
+        .quest-item-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        .quest-item h4 { font-size: 0.95rem; margin-bottom: 0.25rem; }
+
+        .quest-item p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .quest-meta {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.4rem;
+        }
+
+        .quest-tag {
+            font-size: 0.65rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+        }
+
+        /* ===== COMPARISON ===== */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .comparison-grid { grid-template-columns: 1fr; }
+        }
+
+        .comparison-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        .comparison-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .comparison-card ul {
+            list-style: none;
+        }
+
+        .comparison-card li {
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .comparison-card li::before {
+            margin-right: 0.5rem;
+        }
+
+        .comp-old li::before { content: '  '; }
+        .comp-new li::before { content: '  '; }
+        .comp-new { border-color: var(--accent-purple); }
+
+        /* ===== ROADMAP ===== */
+        .roadmap {
+            position: relative;
+        }
+
+        .roadmap-phase {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .roadmap-marker {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            border: 2px solid;
+        }
+
+        .roadmap-content {
+            flex: 1;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.5rem;
+        }
+
+        .roadmap-content h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .roadmap-content p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .roadmap-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+
+        .roadmap-tag {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            background: rgba(168, 85, 247, 0.1);
+            color: var(--accent-purple);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+        }
+
+        /* ===== PRICING ===== */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .pricing-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .pricing-card:hover { transform: translateY(-4px); }
+
+        .pricing-card.featured {
+            border-color: var(--accent-purple);
+            position: relative;
+        }
+
+        .pricing-card.featured::before {
+            content: 'POPULAR';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent-purple);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.2rem 0.8rem;
+            border-radius: 50px;
+        }
+
+        .pricing-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-price {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 1rem 0;
+        }
+
+        .pricing-price span {
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        .pricing-features {
+            list-style: none;
+            text-align: left;
+            margin: 1.5rem 0;
+        }
+
+        .pricing-features li {
+            padding: 0.4rem 0;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .pricing-features li::before {
+            content: ' ';
+            margin-right: 0.5rem;
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            border-top: 1px solid var(--border);
+            margin-top: 2rem;
+        }
+
+        footer p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        footer a {
+            color: var(--accent-purple);
+            text-decoration: none;
+        }
+
+        /* ===== UTILITIES ===== */
+        .gradient-text {
+            background: var(--gradient-hero);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(59, 130, 246, 0.1));
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .highlight-box blockquote {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+            margin: 0 2rem;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav>
+    <div class="nav-inner">
+        <div class="logo">Quest App</div>
+        <ul class="nav-links">
+            <li><a href="#problem">Problem</a></li>
+            <li><a href="#concept">Concept</a></li>
+            <li><a href="#screens">Screens</a></li>
+            <li><a href="#characters">Characters</a></li>
+            <li><a href="#quests">Quests</a></li>
+            <li><a href="#tech">Tech</a></li>
+            <li><a href="#roadmap">Roadmap</a></li>
+        </ul>
+    </div>
+</nav>
+
+<!-- Hero -->
+<div class="hero">
+    <div class="hero-content">
+        <div class="hero-badge">Concept Preview - February 2026</div>
+        <h1>AIを、冒険にしよう。</h1>
+        <p>タスクをRPGのクエストのように進める、<br>非エンジニア向けAIワークフローアプリ</p>
+        <p style="font-size: 0.9rem; color: var(--text-muted); max-width: 500px; margin: 0 auto;">
+            子供からおばあちゃんまで。<br>
+            誰でも30秒でAIの成果物が手に入る。
+        </p>
+        <div class="hero-visual">
+            <img src="images/mascot-cat-and-dog.png" alt="Mascot Characters - Black Cat & Labrador">
+        </div>
+    </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- Problem Section -->
+<section id="problem">
+    <div class="section-label">Problem</div>
+    <h2 class="section-title">AIは便利。でも、使えない人が多い。</h2>
+    <p class="section-desc">
+        ChatGPTやClaude Codeは高機能。でも非エンジニアにとって、AIツールには見えない壁がある。
+    </p>
+
+    <div class="problem-grid">
+        <div class="problem-card">
+            <div class="problem-icon">&#x1F631;</div>
+            <h3>心理的恐怖</h3>
+            <p>ターミナル = ハッカーの画面。「何か壊しそう」という恐怖が、最初のステップを阻む。</p>
+        </div>
+        <div class="problem-card">
+            <div class="problem-icon">&#x1F6E0;</div>
+            <h3>環境構築の壁</h3>
+            <p>Node.js? API key? 環境変数? 最初の「Hello World」にたどり着く前に離脱する。</p>
+        </div>
+        <div class="problem-card">
+            <div class="problem-icon">&#x2753;</div>
+            <h3>何を入力すべきか不明</h3>
+            <p>プロンプト? コマンド? フリーテキストの空白テキストボックスは、初心者にとって恐怖。</p>
+        </div>
+        <div class="problem-card">
+            <div class="problem-icon">&#x1F4C4;</div>
+            <h3>結果の受け取り方</h3>
+            <p>JSONが返ってきても読めない。ファイルがどこに保存されたかもわからない。</p>
+        </div>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Concept Section -->
+<section id="concept">
+    <div class="section-label">Concept</div>
+    <h2 class="section-title">ワークフローを「設計する」のではなく、<br>クエストを「冒険する」。</h2>
+    <p class="section-desc">
+        AIの専門用語をゲームの言葉に置き換える。それだけで、誰でもAIが使えるようになる。
+    </p>
+
+    <table class="concept-table">
+        <thead>
+            <tr>
+                <th>ゲーム内の体験</th>
+                <th class="concept-arrow"></th>
+                <th>実際にやっていること</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>&#x2694; クエストを受ける</td>
+                <td class="concept-arrow">&#x2192;</td>
+                <td>タスクを選ぶ</td>
+            </tr>
+            <tr>
+                <td>&#x1FA84; 呪文の材料を入れる</td>
+                <td class="concept-arrow">&#x2192;</td>
+                <td>フォームに入力する</td>
+            </tr>
+            <tr>
+                <td>&#x2728; 魔法が発動する</td>
+                <td class="concept-arrow">&#x2192;</td>
+                <td>AIがタスクを実行する</td>
+            </tr>
+            <tr>
+                <td>&#x1F4DC; 魔法の成果物を受け取る</td>
+                <td class="concept-arrow">&#x2192;</td>
+                <td>結果をダウンロードする</td>
+            </tr>
+            <tr>
+                <td>&#x2B50; レベルアップ!</td>
+                <td class="concept-arrow">&#x2192;</td>
+                <td>新しいタスクカテゴリが解放される</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="highlight-box">
+        <blockquote>
+            Dify/n8n/Zapierは「何でもできるが設定が難しい」。<br>
+            このアプリは「できることは限られるが、誰でも30秒で完成物が手に入る」。
+        </blockquote>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Screens Section -->
+<section id="screens">
+    <div class="section-label">App Preview</div>
+    <h2 class="section-title">6つの画面でシンプルに完結</h2>
+    <p class="section-desc">
+        オンボーディングからクエスト完了まで、迷わない一本道のUX。
+    </p>
+
+    <div class="mockup-container">
+        <!-- Screen 1: Onboarding -->
+        <div class="mockup-phone">
+            <div class="mockup-status-bar">
+                <span>9:41</span>
+                <span>Quest App</span>
+                <span>100%</span>
+            </div>
+            <div class="mockup-screen">
+                <div class="m-onboard-step">
+                    <div class="m-big-icon">&#x1F9D9;</div>
+                    <h4>相棒を選ぼう</h4>
+                    <p>冒険を一緒に進める仲間を選んでね</p>
+                    <div class="m-choice-grid">
+                        <div class="m-choice selected">
+                            <span>&#x1F408;&#x200D;&#x2B1B;</span>
+                            <small>知的な黒猫<br>戦略タイプ</small>
+                        </div>
+                        <div class="m-choice">
+                            <span>&#x1F415;</span>
+                            <small>元気な犬<br>行動タイプ</small>
+                        </div>
+                    </div>
+                    <button class="m-btn m-btn-primary" style="margin-top:1.5rem">次へ &#x2192;</button>
+                </div>
+            </div>
+            <div class="mockup-label">1. Onboarding</div>
+        </div>
+
+        <!-- Screen 2: Home -->
+        <div class="mockup-phone">
+            <div class="mockup-status-bar">
+                <span>9:42</span>
+                <span>Quest App</span>
+                <span>100%</span>
+            </div>
+            <div class="mockup-screen">
+                <div class="m-header">
+                    <div style="display:flex;align-items:center;gap:0.75rem">
+                        <div class="m-avatar">&#x1F9D9;</div>
+                        <div class="m-user-info">
+                            <h4>&#x1F408;&#x200D;&#x2B1B; Taro</h4>
+                            <span>Lv.2 &#x2022; 65 XP</span>
+                        </div>
+                    </div>
+                    <span style="font-size:1.5rem">&#x1F4DC;</span>
+                </div>
+                <div class="m-level-bar">
+                    <div class="m-level-fill" style="width:43%"></div>
+                </div>
+
+                <div class="m-quest-card">
+                    <div class="m-quest-icon" style="background:rgba(59,130,246,0.15)">&#x1F4DD;</div>
+                    <div class="m-quest-info">
+                        <h5>&#x4F1A;&#x8B70;&#x306E;&#x8B70;&#x4E8B;&#x9332;&#x307E;&#x3068;&#x3081;</h5>
+                        <span>&#x2B50; &#x2022; 20 XP</span>
+                    </div>
+                    <div class="m-xp-badge">business</div>
+                </div>
+                <div class="m-quest-card">
+                    <div class="m-quest-icon" style="background:rgba(236,72,153,0.15)">&#x2709;</div>
+                    <div class="m-quest-info">
+                        <h5>&#x30E1;&#x30FC;&#x30EB;&#x6587;&#x9762;&#x4F5C;&#x6210;</h5>
+                        <span>&#x2B50; &#x2022; 10 XP</span>
+                    </div>
+                    <div class="m-xp-badge">business</div>
+                </div>
+                <div class="m-quest-card">
+                    <div class="m-quest-icon" style="background:rgba(16,185,129,0.15)">&#x1F30D;</div>
+                    <div class="m-quest-info">
+                        <h5>&#x65C5;&#x884C;&#x30D7;&#x30E9;&#x30F3;&#x4F5C;&#x6210;</h5>
+                        <span>&#x2B50;&#x2B50; &#x2022; 30 XP</span>
+                    </div>
+                    <div class="m-xp-badge">life</div>
+                </div>
+                <div class="m-quest-card">
+                    <div class="m-quest-icon" style="background:rgba(245,158,11,0.15)">&#x1F3AC;</div>
+                    <div class="m-quest-info">
+                        <h5>SNS&#x6295;&#x7A3F;&#x6587;&#x4F5C;&#x6210;</h5>
+                        <span>&#x2B50; &#x2022; 10 XP</span>
+                    </div>
+                    <div class="m-xp-badge">creative</div>
+                </div>
+            </div>
+            <div class="mockup-label">2. Home - Quest List</div>
+        </div>
+
+        <!-- Screen 3: Quest Detail -->
+        <div class="mockup-phone">
+            <div class="mockup-status-bar">
+                <span>9:43</span>
+                <span>Quest App</span>
+                <span>99%</span>
+            </div>
+            <div class="mockup-screen">
+                <div class="m-quest-detail-header">
+                    <div class="m-big-icon">&#x1F4DD;</div>
+                    <h4>会議の議事録まとめ</h4>
+                    <div class="m-difficulty">&#x2B50; Easy &#x2022; +20 XP</div>
+                </div>
+
+                <div class="m-input-field">
+                    <label>&#x1FA84; 会議の議題</label>
+                    <div class="m-placeholder">例: 新製品ローンチ戦略</div>
+                    <div class="m-hint">会議の主なトピックを入力してね</div>
+                </div>
+
+                <div class="m-input-field">
+                    <label>&#x1F465; 参加者</label>
+                    <div class="m-placeholder">例: 田中太郎、山田花子</div>
+                    <div class="m-hint">改行で区切ってもOK（任意）</div>
+                </div>
+
+                <div class="m-input-field">
+                    <label>&#x1F4CB; 会議の内容</label>
+                    <div class="m-placeholder">箇条書きでもOK!</div>
+                    <div class="m-hint">話した内容をざっくり入力</div>
+                </div>
+
+                <button class="m-btn m-btn-primary">&#x2728; 魔法を唱える</button>
+            </div>
+            <div class="mockup-label">3. Quest Detail</div>
+        </div>
+
+        <!-- Screen 4: Execution -->
+        <div class="mockup-phone">
+            <div class="mockup-status-bar">
+                <span>9:44</span>
+                <span>Quest App</span>
+                <span>99%</span>
+            </div>
+            <div class="mockup-screen">
+                <div class="m-chat-bubble">
+                    <div class="m-chat-avatar" style="background:rgba(168,85,247,0.2)">&#x1F408;&#x200D;&#x2B1B;</div>
+                    <div class="m-chat-text">会議の内容を分析中にゃ...</div>
+                </div>
+                <div class="m-chat-bubble">
+                    <div class="m-chat-avatar" style="background:rgba(168,85,247,0.2)">&#x1F408;&#x200D;&#x2B1B;</div>
+                    <div class="m-chat-text">要点を3つに絞り込んだにゃ</div>
+                </div>
+                <div class="m-chat-bubble">
+                    <div class="m-chat-avatar" style="background:rgba(168,85,247,0.2)">&#x1F408;&#x200D;&#x2B1B;</div>
+                    <div class="m-chat-text">ToDoリストを作成中...</div>
+                </div>
+
+                <div class="m-progress-bar">
+                    <div class="m-progress-label">&#x2728; 魔法発動中...</div>
+                    <div class="m-progress-track">
+                        <div class="m-progress-fill"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="mockup-label">4. Execution</div>
+        </div>
+
+        <!-- Screen 5: Result -->
+        <div class="mockup-phone">
+            <div class="mockup-status-bar">
+                <span>9:45</span>
+                <span>Quest App</span>
+                <span>98%</span>
+            </div>
+            <div class="mockup-screen">
+                <div class="m-result-celebration">
+                    <div class="m-big-icon">&#x1F389;</div>
+                    <h4>Quest Complete!</h4>
+                    <div class="m-xp-gain">+20 XP</div>
+                </div>
+
+                <div class="m-result-preview">
+                    <strong>&#x25A0; &#x8B70;&#x4E8B;&#x9332;&#x8981;&#x7D04;</strong><br><br>
+                    1. &#x65B0;&#x88FD;&#x54C1;&#x306E;&#x767A;&#x58F2;&#x65E5;&#x30923;&#x6708;15&#x65E5;&#x306B;&#x6C7A;&#x5B9A;<br>
+                    2. &#x30DE;&#x30FC;&#x30B1;&#x30C6;&#x30A3;&#x30F3;&#x30B0;&#x4E88;&#x7B97;500&#x4E07;&#x5186;&#x3092;&#x627F;&#x8A8D;<br>
+                    3. &#x6B21;&#x56DE;&#x4F1A;&#x8B70;&#x306F;3&#x67088&#x65E5;&#x306B;&#x5B9F;&#x65BD;<br><br>
+                    <strong>&#x25A0; ToDo&#x30EA;&#x30B9;&#x30C8;</strong><br>
+                    &#x25A1; &#x30D7;&#x30EC;&#x30B9;&#x30EA;&#x30EA;&#x30FC;&#x30B9;&#x4F5C;&#x6210;(&#x7530;&#x4E2D;)<br>
+                    &#x25A1; &#x5E83;&#x544A;&#x4EE3;&#x7406;&#x5E97;&#x9078;&#x5B9A;(&#x5C71;&#x7530;)
+                </div>
+
+                <div style="display:flex;gap:0.5rem;margin-top:1rem">
+                    <button class="m-btn" style="background:rgba(16,185,129,0.2);color:var(--accent-green);flex:1">&#x1F4CB; Copy</button>
+                    <button class="m-btn" style="background:rgba(59,130,246,0.2);color:var(--accent-blue);flex:1">&#x1F4E5; DL</button>
+                </div>
+            </div>
+            <div class="mockup-label">5. Result</div>
+        </div>
+
+        <!-- Screen 6: History -->
+        <div class="mockup-phone">
+            <div class="mockup-status-bar">
+                <span>9:46</span>
+                <span>Quest App</span>
+                <span>98%</span>
+            </div>
+            <div class="mockup-screen">
+                <h4 style="margin-bottom:1rem">&#x1F4DC; Quest History</h4>
+
+                <div class="m-quest-card" style="border-left:3px solid var(--accent-green)">
+                    <div class="m-quest-icon" style="background:rgba(16,185,129,0.15)">&#x2705;</div>
+                    <div class="m-quest-info">
+                        <h5>&#x4F1A;&#x8B70;&#x306E;&#x8B70;&#x4E8B;&#x9332;&#x307E;&#x3068;&#x3081;</h5>
+                        <span>2&#x5206;&#x524D; &#x2022; +20 XP</span>
+                    </div>
+                </div>
+                <div class="m-quest-card" style="border-left:3px solid var(--accent-green)">
+                    <div class="m-quest-icon" style="background:rgba(16,185,129,0.15)">&#x2705;</div>
+                    <div class="m-quest-info">
+                        <h5>&#x30E1;&#x30FC;&#x30EB;&#x6587;&#x9762;&#x4F5C;&#x6210;</h5>
+                        <span>1&#x6642;&#x9593;&#x524D; &#x2022; +10 XP</span>
+                    </div>
+                </div>
+                <div class="m-quest-card" style="border-left:3px solid var(--accent-green)">
+                    <div class="m-quest-icon" style="background:rgba(16,185,129,0.15)">&#x2705;</div>
+                    <div class="m-quest-info">
+                        <h5>SNS&#x6295;&#x7A3F;&#x6587;&#x4F5C;&#x6210;</h5>
+                        <span>&#x6628;&#x65E5; &#x2022; +10 XP</span>
+                    </div>
+                </div>
+                <div class="m-quest-card" style="border-left:3px solid var(--accent-green)">
+                    <div class="m-quest-icon" style="background:rgba(16,185,129,0.15)">&#x2705;</div>
+                    <div class="m-quest-info">
+                        <h5>&#x81EA;&#x5DF1;&#x7D39;&#x4ECB;&#x6587;&#x4F5C;&#x6210;</h5>
+                        <span>2&#x65E5;&#x524D; &#x2022; +10 XP</span>
+                    </div>
+                </div>
+
+                <div style="text-align:center;margin-top:1rem">
+                    <span style="font-size:0.8rem;color:var(--text-muted)">Total: 4 Quests &#x2022; 50 XP earned</span>
+                </div>
+            </div>
+            <div class="mockup-label">6. History</div>
+        </div>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Character Section -->
+<section id="characters">
+    <div class="section-label">Character Design</div>
+    <h2 class="section-title">二軸のキャラクターシステム</h2>
+    <p class="section-desc">
+        AIの化身（マスコット）と冒険者の分身（アバター）。性別ではなく役割で選ぶ。<br>
+        Stardew Valley / Undertale風の16bitクリアピクセルアート。
+    </p>
+
+    <div class="character-showcase">
+        <div class="character-card">
+            <img src="images/mascot-cat-and-dog.png" alt="Mascot Characters">
+            <div class="card-body">
+                <h3>&#x1F408;&#x200D;&#x2B1B; マスコット（AIの化身）</h3>
+                <p>
+                    <strong>黒猫</strong> = 知的・戦略系。「分析するにゃ」<br>
+                    <strong>ラブラドール</strong> = 元気・行動系。「やるぞ!」<br><br>
+                    クエスト実行中の進捗報告、ヒント、お祝いを担当。
+                </p>
+            </div>
+        </div>
+        <div class="character-card">
+            <img src="images/character-select-8bit.png" alt="Character Selection">
+            <div class="card-body">
+                <h3>&#x1F9D9; アバター（ユーザーの分身）</h3>
+                <p>
+                    <strong>策士（Planner）</strong> = 分析・計画系クエスト向き<br>
+                    <strong>探求者（Explorer）</strong> = リサーチ・発見系クエスト向き<br>
+                    <strong>創作者（Crafter）</strong> = クリエイティブ系クエスト向き<br><br>
+                    クエストクリアで成長: 色 &#x2192; 装備 &#x2192; シルエット変化
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top:2rem">
+        <div class="character-card" style="max-width:750px;margin:0 auto">
+            <img src="images/mage-girl-evolution.png" alt="Character Evolution">
+            <div class="card-body">
+                <h3>&#x2B50; キャラクター成長チャート</h3>
+                <p>クエストをクリアするたびにキャラクターが成長。3段階の変化で達成感を演出。</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Gamification -->
+<section id="gamification">
+    <div class="section-label">Gamification</div>
+    <h2 class="section-title">レベルアップで新しいクエストが解放</h2>
+    <p class="section-desc">
+        義務感を出さない。ランキングも連続ログインボーナスもない。純粋な成長の喜びだけ。
+    </p>
+
+    <div class="level-track" style="justify-content:center">
+        <div class="level-node">
+            <div class="level-circle" style="background:rgba(16,185,129,0.15);border-color:var(--accent-green)">&#x1F331;</div>
+            <h4>Lv.1</h4>
+            <span>0 XP~</span>
+        </div>
+        <div class="level-connector"></div>
+        <div class="level-node">
+            <div class="level-circle" style="background:rgba(59,130,246,0.15);border-color:var(--accent-blue)">&#x2694;</div>
+            <h4>Lv.2</h4>
+            <span>50 XP~</span>
+        </div>
+        <div class="level-connector"></div>
+        <div class="level-node">
+            <div class="level-circle" style="background:rgba(168,85,247,0.15);border-color:var(--accent-purple)">&#x1F451;</div>
+            <h4>Lv.3</h4>
+            <span>200 XP~</span>
+        </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;margin-top:2rem">
+        <div class="problem-card" style="border-left:3px solid var(--accent-green)">
+            <h3>Lv.1 - &#x898B;&#x7FD2;&#x3044;</h3>
+            <p>basicカテゴリのクエストが利用可能。メール作成、自己紹介文など簡単なタスクから開始。</p>
+        </div>
+        <div class="problem-card" style="border-left:3px solid var(--accent-blue)">
+            <h3>Lv.2 - &#x4E00;&#x4EBA;&#x524D;</h3>
+            <p>business / lifeカテゴリが解放。議事録まとめ、旅行プラン作成など実用的なクエストに挑戦。</p>
+        </div>
+        <div class="problem-card" style="border-left:3px solid var(--accent-purple)">
+            <h3>Lv.3 - &#x9054;&#x4EBA;</h3>
+            <p>creative / analysisカテゴリ + 全クエスト解放。レビュー分析、プレゼン構成など高度なタスクに挑戦。</p>
+        </div>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Quest Templates -->
+<section id="quests">
+    <div class="section-label">Quest Templates</div>
+    <h2 class="section-title">MVP時点で10個のプリセットクエスト</h2>
+    <p class="section-desc">
+        各クエストに説明文・入力例・バリデーションを完備。何を入力すべきか迷わない。
+    </p>
+
+    <div class="quest-list">
+        <div class="quest-item">
+            <div class="quest-item-icon" style="background:rgba(59,130,246,0.15)">&#x1F4DD;</div>
+            <div>
+                <h4>会議の議事録まとめ</h4>
+                <p>内容を3行要約 + ToDoリスト作成</p>
+                <div class="quest-meta">
+                    <span class="quest-tag" style="background:rgba(59,130,246,0.15);color:var(--accent-blue)">business</span>
+                    <span class="quest-tag" style="background:rgba(245,158,11,0.15);color:var(--accent-yellow)">&#x2B50; 20XP</span>
+                </div>
+            </div>
+        </div>
+        <div class="quest-item">
+            <div class="quest-item-icon" style="background:rgba(236,72,153,0.15)">&#x2709;</div>
+            <div>
+                <h4>メール文面作成</h4>
+                <p>宛先・用件・トーンから適切なメール文を生成</p>
+                <div class="quest-meta">
+                    <span class="quest-tag" style="background:rgba(59,130,246,0.15);color:var(--accent-blue)">business</span>
+                    <span class="quest-tag" style="background:rgba(245,158,11,0.15);color:var(--accent-yellow)">&#x2B50; 10XP</span>
+                </div>
+            </div>
+        </div>
+        <div class="quest-item">
+            <div class="quest-item-icon" style="background:rgba(249,115,22,0.15)">&#x1F3AC;</div>
+            <div>
+                <h4>SNS投稿文作成</h4>
+                <p>テーマ+プラットフォームから投稿文3パターン</p>
+                <div class="quest-meta">
+                    <span class="quest-tag" style="background:rgba(168,85,247,0.15);color:var(--accent-purple)">creative</span>
+                    <span class="quest-tag" style="background:rgba(245,158,11,0.15);color:var(--accent-yellow)">&#x2B50; 10XP</span>
+                </div>
+            </div>
+        </div>
+        <div class="quest-item">
+            <div class="quest-item-icon" style="background:rgba(16,185,129,0.15)">&#x1F4E2;</div>
+            <div>
+                <h4>お知らせ文作成</h4>
+                <p>イベント名+詳細からお知らせ文を生成</p>
+                <div class="quest-meta">
+                    <span class="quest-tag" style="background:rgba(16,185,129,0.15);color:var(--accent-green)">life</span>
+                    <span class="quest-tag" style="background:rgba(245,158,11,0.15);color:var(--accent-yellow)">&#x2B50; 10XP</span>
+                </div>
+            </div>
+        </div>
+        <div class="quest-item">
+            <div class="quest-item-icon" style="background:rgba(16,185,129,0.15)">&#x1F30D;</div>
+            <div>
+                <h4>旅行プラン作成</h4>
+                <p>目的地・日数・予算・好みから日程表を作成</p>
+                <div class="quest-meta">
+                    <span class="quest-tag" style="background:rgba(16,185,129,0.15);color:var(--accent-green)">life</span>
+                    <span class="quest-tag" style="background:rgba(245,158,11,0.15);color:var(--accent-yellow)">&#x2B50;&#x2B50; 30XP</span>
+                </div>
+            </div>
+        </div>
+        <div class="quest-item">
+            <div class="quest-item-icon" style="background:rgba(59,130,246,0.15)">&#x1F4CA;</div>
+            <div>
+                <h4>プレゼン構成作成</h4>
+                <p>テーマ・対象者・時間からスライド構成案を生成</p>
+                <div class="quest-meta">
+                    <span class="quest-tag" style="background:rgba(59,130,246,0.15);color:var(--accent-blue)">business</span>
+                    <span class="quest-tag" style="background:rgba(245,158,11,0.15);color:var(--accent-yellow)">&#x2B50;&#x2B50; 20XP</span>
+                </div>
+            </div>
+        </div>
+        <div class="quest-item">
+            <div class="quest-item-icon" style="background:rgba(168,85,247,0.15)">&#x1F50D;</div>
+            <div>
+                <h4>商品レビュー要約</h4>
+                <p>レビューテキストを要約+ポジネガ分析</p>
+                <div class="quest-meta">
+                    <span class="quest-tag" style="background:rgba(168,85,247,0.15);color:var(--accent-purple)">analysis</span>
+                    <span class="quest-tag" style="background:rgba(245,158,11,0.15);color:var(--accent-yellow)">&#x2B50;&#x2B50; 20XP</span>
+                </div>
+            </div>
+        </div>
+        <div class="quest-item">
+            <div class="quest-item-icon" style="background:rgba(236,72,153,0.15)">&#x1F64B;</div>
+            <div>
+                <h4>自己紹介文作成</h4>
+                <p>名前・職業・趣味・トーンから自己紹介文を生成</p>
+                <div class="quest-meta">
+                    <span class="quest-tag" style="background:rgba(168,85,247,0.15);color:var(--accent-purple)">creative</span>
+                    <span class="quest-tag" style="background:rgba(245,158,11,0.15);color:var(--accent-yellow)">&#x2B50; 10XP</span>
+                </div>
+            </div>
+        </div>
+        <div class="quest-item">
+            <div class="quest-item-icon" style="background:rgba(59,130,246,0.15)">&#x1F4C5;</div>
+            <div>
+                <h4>日報・週報作成</h4>
+                <p>今日やったこと+課題から報告書を生成</p>
+                <div class="quest-meta">
+                    <span class="quest-tag" style="background:rgba(59,130,246,0.15);color:var(--accent-blue)">business</span>
+                    <span class="quest-tag" style="background:rgba(245,158,11,0.15);color:var(--accent-yellow)">&#x2B50;&#x2B50; 20XP</span>
+                </div>
+            </div>
+        </div>
+        <div class="quest-item">
+            <div class="quest-item-icon" style="background:rgba(168,85,247,0.15)">&#x1F4D6;</div>
+            <div>
+                <h4>読書感想文</h4>
+                <p>本のタイトル+感想メモから感想文を生成</p>
+                <div class="quest-meta">
+                    <span class="quest-tag" style="background:rgba(168,85,247,0.15);color:var(--accent-purple)">creative</span>
+                    <span class="quest-tag" style="background:rgba(245,158,11,0.15);color:var(--accent-yellow)">&#x2B50;&#x2B50; 20XP</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Comparison -->
+<section id="comparison">
+    <div class="section-label">Differentiation</div>
+    <h2 class="section-title">既存ツールとの違い</h2>
+
+    <div class="comparison-grid">
+        <div class="comparison-card comp-old">
+            <h3>&#x1F6E0; Dify / n8n / Zapier</h3>
+            <ul>
+                <li>&#x1F465; エンジニア・テック寄り</li>
+                <li>&#x1F5A5; ノード+線のフローチャートUI</li>
+                <li>&#x2699; ワークフローを「設計する」</li>
+                <li>&#x1F4DD; パラメータ設定が必要</li>
+                <li>&#x26A1; モチベーション = 効率化</li>
+                <li>&#x267B; 価値 = 自動化の自由度</li>
+            </ul>
+        </div>
+        <div class="comparison-card comp-new">
+            <h3>&#x2728; Quest App (This)</h3>
+            <ul>
+                <li>&#x1F46A; 非エンジニア全般（子供〜高齢者）</li>
+                <li>&#x1F3AE; ゲーム風カードUI</li>
+                <li>&#x2694; クエストを「冒険する」</li>
+                <li>&#x1F4CB; ガイド付き選択式入力</li>
+                <li>&#x1F31F; モチベーション = 楽しさ + 成長</li>
+                <li>&#x1F3AF; 価値 = 完成物への最短距離</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Tech Stack -->
+<section id="tech">
+    <div class="section-label">Technology</div>
+    <h2 class="section-title">技術スタック</h2>
+    <p class="section-desc">
+        PWA（Progressive Web App）として開発。URLを開くだけで使える。インストール不要。
+    </p>
+
+    <div class="tech-grid">
+        <div class="tech-item">
+            <div class="tech-icon">&#x25B2;</div>
+            <h4>Next.js 15</h4>
+            <span>App Router</span>
+        </div>
+        <div class="tech-item">
+            <div class="tech-icon">&#x269B;</div>
+            <h4>React 19</h4>
+            <span>TypeScript</span>
+        </div>
+        <div class="tech-item">
+            <div class="tech-icon">&#x1F4A8;</div>
+            <h4>TailwindCSS</h4>
+            <span>Styling</span>
+        </div>
+        <div class="tech-item">
+            <div class="tech-icon">&#x1F43B;</div>
+            <h4>Zustand</h4>
+            <span>State Management</span>
+        </div>
+        <div class="tech-item">
+            <div class="tech-icon">&#x26A1;</div>
+            <h4>Supabase</h4>
+            <span>Auth + DB + Storage</span>
+        </div>
+        <div class="tech-item">
+            <div class="tech-icon">&#x1F916;</div>
+            <h4>Anthropic API</h4>
+            <span>Claude (Server-side)</span>
+        </div>
+        <div class="tech-item">
+            <div class="tech-icon">&#x25B3;</div>
+            <h4>Vercel</h4>
+            <span>Deployment</span>
+        </div>
+        <div class="tech-item">
+            <div class="tech-icon">&#x1F4F1;</div>
+            <h4>PWA</h4>
+            <span>Mobile Ready</span>
+        </div>
+    </div>
+
+    <!-- Architecture Diagram -->
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:2rem;margin-top:2rem;font-family:monospace;font-size:0.8rem;overflow-x:auto">
+        <pre style="color:var(--text-secondary);line-height:1.8">
+  &#x250C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2510;
+  &#x2502;  <span style="color:var(--accent-blue)">Frontend (PWA)</span>                  &#x2502;
+  &#x2502;  Next.js 15 + React 19 + TS       &#x2502;
+  &#x2502;  TailwindCSS + Zustand            &#x2502;
+  &#x2514;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x252C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2518;
+                  &#x2502;
+  &#x250C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x253C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2510;
+  &#x2502;  <span style="color:var(--accent-green)">Backend (API Routes)</span>           &#x2502;
+  &#x2502;  Anthropic SDK + Rate Limiting    &#x2502;
+  &#x2514;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x252C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2518;
+                  &#x2502;
+  &#x250C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x253C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2510;
+  &#x2502;  <span style="color:var(--accent-yellow)">Supabase</span>                       &#x2502;
+  &#x2502;  Auth + PostgreSQL + Storage     &#x2502;
+  &#x2514;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2518;
+        </pre>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Pricing -->
+<section id="pricing">
+    <div class="section-label">Business Model</div>
+    <h2 class="section-title">料金プラン（想定）</h2>
+
+    <div class="pricing-grid">
+        <div class="pricing-card">
+            <h3>Free</h3>
+            <div class="pricing-price">&#xA5;0</div>
+            <ul class="pricing-features">
+                <li>10&#x56DE;/&#x65E5; &#x306E;&#x30AF;&#x30A8;&#x30B9;&#x30C8;&#x5B9F;&#x884C;</li>
+                <li>basic&#x30AB;&#x30C6;&#x30B4;&#x30EA;&#x306E;&#x30AF;&#x30A8;&#x30B9;&#x30C8;</li>
+                <li>&#x5B9F;&#x884C;&#x5C65;&#x6B74;&#xFF08;7&#x65E5;&#x9593;&#xFF09;</li>
+                <li>&#x30AD;&#x30E3;&#x30E9;&#x30AF;&#x30BF;&#x30FC;&#x9078;&#x629E;</li>
+            </ul>
+        </div>
+        <div class="pricing-card featured">
+            <h3>Standard</h3>
+            <div class="pricing-price" style="color:var(--accent-purple)">&#xA5;980<span>/&#x6708;</span></div>
+            <ul class="pricing-features">
+                <li>100&#x56DE;/&#x65E5; &#x306E;&#x30AF;&#x30A8;&#x30B9;&#x30C8;&#x5B9F;&#x884C;</li>
+                <li>&#x5168;&#x30AB;&#x30C6;&#x30B4;&#x30EA;&#x306E;&#x30AF;&#x30A8;&#x30B9;&#x30C8;</li>
+                <li>&#x5B9F;&#x884C;&#x5C65;&#x6B74;&#xFF08;&#x7121;&#x5236;&#x9650;&#xFF09;</li>
+                <li>&#x512A;&#x5148;&#x5B9F;&#x884C;&#x30AD;&#x30E5;&#x30FC;</li>
+            </ul>
+        </div>
+        <div class="pricing-card">
+            <h3>Pro</h3>
+            <div class="pricing-price">&#xA5;2,980<span>/&#x6708;</span></div>
+            <ul class="pricing-features">
+                <li>&#x7121;&#x5236;&#x9650;&#x306E;&#x30AF;&#x30A8;&#x30B9;&#x30C8;&#x5B9F;&#x884C;</li>
+                <li>&#x30AB;&#x30B9;&#x30BF;&#x30E0;&#x30AF;&#x30A8;&#x30B9;&#x30C8;&#x4F5C;&#x6210;(Phase2)</li>
+                <li>&#x30C6;&#x30F3;&#x30D7;&#x30EC;&#x30FC;&#x30C8;&#x5171;&#x6709;</li>
+                <li>API&#x30A2;&#x30AF;&#x30BB;&#x30B9;</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Roadmap -->
+<section id="roadmap">
+    <div class="section-label">Roadmap</div>
+    <h2 class="section-title">開発ロードマップ</h2>
+
+    <div class="roadmap">
+        <div class="roadmap-phase">
+            <div class="roadmap-marker" style="background:rgba(16,185,129,0.15);border-color:var(--accent-green);color:var(--accent-green)">1</div>
+            <div class="roadmap-content">
+                <h3>Phase 1 - MVP</h3>
+                <p>「1つのクエストを完了して成功体験を得る」までの一本道を完成させる。</p>
+                <div class="roadmap-tags">
+                    <span class="roadmap-tag">Next.js + Supabase</span>
+                    <span class="roadmap-tag">Supabase Auth</span>
+                    <span class="roadmap-tag">Onboarding</span>
+                    <span class="roadmap-tag">Quest Execution</span>
+                    <span class="roadmap-tag">XP + Level</span>
+                    <span class="roadmap-tag">PWA</span>
+                    <span class="roadmap-tag">10 Quest Templates</span>
+                    <span class="roadmap-tag">Rate Limiting</span>
+                </div>
+            </div>
+        </div>
+        <div class="roadmap-phase">
+            <div class="roadmap-marker" style="background:rgba(59,130,246,0.15);border-color:var(--accent-blue);color:var(--accent-blue)">2</div>
+            <div class="roadmap-content">
+                <h3>Phase 2 - &#x62E1;&#x5F35;</h3>
+                <p>ユーザーが自分でクエストを作成・共有できるプラットフォームへ進化。</p>
+                <div class="roadmap-tags">
+                    <span class="roadmap-tag">Custom Quests</span>
+                    <span class="roadmap-tag">Template Sharing</span>
+                    <span class="roadmap-tag">Multi AI (GPT/Gemini)</span>
+                    <span class="roadmap-tag">Multi-step Quests</span>
+                    <span class="roadmap-tag">Stripe Billing</span>
+                </div>
+            </div>
+        </div>
+        <div class="roadmap-phase">
+            <div class="roadmap-marker" style="background:rgba(168,85,247,0.15);border-color:var(--accent-purple);color:var(--accent-purple)">3</div>
+            <div class="roadmap-content">
+                <h3>Phase 3 - &#x30D7;&#x30E9;&#x30C3;&#x30C8;&#x30D5;&#x30A9;&#x30FC;&#x30E0;&#x5316;</h3>
+                <p>スケジュール実行、外部ツール連携、チーム機能でエンタープライズ対応。</p>
+                <div class="roadmap-tags">
+                    <span class="roadmap-tag">Scheduled Execution</span>
+                    <span class="roadmap-tag">MCP / Zapier</span>
+                    <span class="roadmap-tag">Team Features</span>
+                    <span class="roadmap-tag">Public API</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Footer -->
+<footer>
+    <p style="font-size:1.5rem;margin-bottom:1rem">&#x2694; &#x2728; &#x1F3AE;</p>
+    <p>Quest App - Game-style AI Workflow App Concept</p>
+    <p style="margin-top:0.5rem">Built with Claude Code | <a href="https://github.com/naokijodan" target="_blank">@naokijodan</a></p>
+    <p style="margin-top:0.3rem;font-size:0.8rem">February 2026</p>
+</footer>
+
+</body>
+</html>
